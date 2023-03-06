@@ -1,38 +1,41 @@
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-"""
-        self.vocab = Vocab(vocab_path=self.vocab_path)
-        self.criterion = nn.CrossEntropyLoss(ignore_index=self.vocab.pad_idx,
-                                             reduction='mean')
-"""
+from model import Transformer
 
-
-class ModelModule(pl.LightningModule):
-    def __init__(self):
+class GPTModelModule(pl.LightningModule):
+    def __init__(self, layers, pad_idx, vocab_len):
         super().__init__()
-        # TODO: model 정의 
-        # TODO: vocab 정의
-        self.criterion = nn.CrossEntropyLoss(ignore_index=self.vocab.pad_idx, reduction='mean') # TODO : 모델 안에 넣기
-    
+
+        self.criterion = nn.CrossEntropyLoss(ignore_index=pad_idx, reduction='mean')
+
+        self.model = Transformer(layers=layers, pad_idx=pad_idx,
+                           words=vocab_len, seq_len=64,
+                           heads=4, dims=512, rate=4,
+                           dropout=0.01, bidirectional=False)
+        
+        # TODO: 각종 설정 넣기
+        self.use_grad_ckpt = True
+        self.total_steps = 10
+        self.lr = 0.001
+        
     def training_step(self, batch, batch_idx):
-        loss = 0
+        print('#############',batch['input'].shape)
+        # batch['input'], batch['output'] = batch['input'].to(self.device), batch['output'].to(self.device)
+        logits = self.model(batch['input'], use_grad_ckpt=self.use_grad_ckpt) 
+        loss = self.criterion(logits.transpose(1, 2), batch['output'])
         return loss
 
     def validation_step(self, batch, batch_idx, dataset_idex=0):
-        # TODO: model에서 infer 후 pred 와 answer 비교
-        scores = 0
-        return scores
+        # batch['input'], batch['output'] = batch['input'].to(self.device), batch['output'].to(self.device)
+        logits, _ = self.model(batch['input'], past=None) 
+        loss = self.criterion(logits.transpose(1, 2), batch['output'])
+        return {"loss": loss}
 
     def configure_optimizers(self):
-
-        max_iter = None
-        max_iter = min(self.max_steps, max_iter) if max_iter is not None else self.max_steps 
-
-        assert max_iter is not None
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
         scheduler = {
-            "scheduler": torch.optim.lr_scheduler.LambdaLR(optimizer, lambda step: 1 - step / self.total_steps), # TODO : maxiter?
+            "scheduler": torch.optim.lr_scheduler.LambdaLR(optimizer, lambda step: 1 - step / self.total_steps),
             "name": "learning_rate",
             "interval": "step",
         }

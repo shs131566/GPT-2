@@ -1,2 +1,4 @@
 *.pth
 *.txt
+__pycache__/
+result/

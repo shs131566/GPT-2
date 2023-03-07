@@ -20,15 +20,15 @@ def train():
     #!config
     vocab_path = '/home/ubuntu/WORKSPACE/GPT2-lightning/vocab-ko-302M.txt'
     corpus_path = '/home/ubuntu/WORKSPACE/GPT2-lightning/data-toy.txt'
-    seq_len = 16
+    seq_len = 64
     batch_size = 1
     result_path = 'result'
     exp_name = 'Test'
-    exp_version = '230228'
+    exp_version = '230307'
     resume_from_checkpoint_path = None
     num_nodes = 1
     max_steps = 100
-    val_check_interval = 40
+    val_check_interval = 16
     gradient_clip_val = 5
     layers = 1
     #!
@@ -44,7 +44,12 @@ def train():
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
 
-    model_module = GPTModelModule(layers, dataset.pad_idx, dataset.vocab_len)
+    model_module = GPTModelModule(layers=layers, 
+                                  pad_idx=dataset.pad_idx,
+                                  vocab_len=dataset.vocab_len,
+                                  result_path=result_path,
+                                  exp_name=exp_name,
+                                  exp_version=exp_version)
     data_module = GPTDataModule(train_dataset=train_dataset,
                                 val_dataset=val_dataset,
                                 batch_size=batch_size)

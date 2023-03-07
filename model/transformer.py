@@ -100,8 +100,8 @@ class Transformer(nn.Module):
         # Apply transformer layers sequentially.
         present = []
         for i, transformer in enumerate(self.transformers):
-            if self.training and use_grad_ckpt:
-                transformer = torch.utils.checkpoint.checkpoint(transformer) #TODO
+            #if self.training and use_grad_ckpt:
+                #transformer = torch.utils.checkpoint.checkpoint(transformer) #TODO
             x = transformer(x, past[i] if past is not None else None, mask)
 
             if not self.training:

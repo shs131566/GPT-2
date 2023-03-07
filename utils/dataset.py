@@ -33,7 +33,7 @@ class GPTDataset(Dataset):
         self.pad_token = pad_token
 
         self.lines = self.corpus_fp.readlines()
-        self.lines = [line for line in self.lines if len(line) + 2 > self.seq_len]
+        self.lines = [line for line in self.lines if len(line) + 2 < self.seq_len]
     
         with open(vocab_path, 'r', encoding='utf-8') as fp:
             self.additional_tokens = [bos_token, eos_token, pad_token]
@@ -65,7 +65,7 @@ class GPTDataset(Dataset):
         indices = [self.bos_idx] + indices + [self.eos_idx]
         indices += [self.pad_idx] * (self.seq_len - len(indices) + 1)
 
-        indices = indices[:self.seq_len+1]
+        # indices = indices[:self.seq_len+1]
         
         data = {'input': indices[:-1], 'output': indices[1:]}
 
